@@ -16,10 +16,10 @@ def run_kmeans():
     print("="*80 + "\n")
     try:
         result = subprocess.run([sys.executable, str(apps_src / "k_means.py")], check=True)
-        print("\n✓ K-Means clustering completed successfully!")
+        print("\n K-Means clustering completed successfully!")
         return True
     except Exception as e:
-        print(f"\n✗ Error during K-Means execution: {str(e)}")
+        print(f"\n Error during K-Means execution: {str(e)}")
         import traceback
         traceback.print_exc()
         return False
