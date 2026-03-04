@@ -3,17 +3,20 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
-os.makedirs("data", exist_ok=True)
+os.makedirs("apps/output/results", exist_ok=True)
+os.makedirs("apps/output/figures/k_means", exist_ok=True)
 sns.set_style("whitegrid")
 
 donnees = pd.read_csv("data/UNSW_NB15_testing-set.csv")
 
 variables_principales = ["dur", "sbytes", "dbytes", "spkts", "dpkts", "rate", "sttl", "dttl"]
 
-# exports de base
-donnees.head(20).to_csv("data/apercu_donnees.csv", index=False)
-donnees.describe().to_csv("data/statistiques_descriptives.csv")
+os.makedirs("apps/output/results", exist_ok=True)
+donnees.head(20).to_csv("apps/output/results/apercu_donnees.csv", index=False)
+donnees.describe().to_csv("apps/output/results/statistiques_descriptives.csv")
 
 # résumé global
 nb_lignes, nb_colonnes = donnees.shape
@@ -27,7 +30,7 @@ print(f"Dataset: {nb_lignes} lignes, {nb_colonnes} colonnes")
 print(f"Variables principales: {variables_principales}\n")
 
 # stats principales
-donnees[variables_principales].describe().round(2).to_csv("data/stats_variables_principales.csv")
+donnees[variables_principales].describe().round(2).to_csv("apps/output/results/stats_variables_principales.csv")
 
 # histogrammes (grille 3x3)
 figure_hist, axes_hist = plt.subplots(3, 3, figsize=(15, 12))
@@ -41,7 +44,7 @@ for index in range(len(variables_principales[:9]), 9):
     axes_hist[index].axis("off")
 
 plt.tight_layout()
-plt.savefig("data/distribution_variables_principales.png", dpi=300, bbox_inches="tight")
+plt.savefig("apps/output/figures/k_means/distribution_variables_principales.png", dpi=300, bbox_inches="tight")
 
 # boxplots (grille 3x3)
 figure_box, axes_box = plt.subplots(3, 3, figsize=(15, 12))
@@ -55,7 +58,7 @@ for index in range(len(variables_principales[:9]), 9):
     axes_box[index].axis("off")
 
 plt.tight_layout()
-plt.savefig("data/boxplots_variables_principales.png", dpi=300, bbox_inches="tight")
+plt.savefig("apps/output/figures/k_means/boxplots_variables_principales.png", dpi=300, bbox_inches="tight")
 
 # rapport outliers IQR
 nb_lignes_total = len(donnees)
@@ -87,14 +90,28 @@ rapport_outliers = pd.DataFrame(
     columns=["var", "outliers", "outliers_%", "zeros", "negatifs", "limite_inf", "limite_sup"],
 ).sort_values("outliers", ascending=False)
 
-rapport_outliers.to_csv("data/outliers_iqr.csv", index=False)
+rapport_outliers.to_csv("apps/output/results/outliers_iqr.csv", index=False)
 
-# matrice de corrélation
-correlations = donnees[variables_principales].corr()
-correlations.to_csv("data/matrice_correlation.csv")
+# analyse du coude (elbow method)
+scaleur = StandardScaler()
+donnees_normalisees = scaleur.fit_transform(donnees[variables_principales])
 
-plt.figure(figsize=(14, 10))
-sns.heatmap(correlations, annot=True, fmt=".2f", cmap="coolwarm", center=0, square=True, linewidths=1)
-plt.title("Matrice de corrélation (variables principales)")
+inertias = []
+range_k = range(1, 11)
+
+for k in range_k:
+    kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+    kmeans.fit(donnees_normalisees)
+    inertias.append(kmeans.inertia_)
+
+plt.figure(figsize=(10, 6))
+plt.plot(range_k, inertias, "bo-", linewidth=2, markersize=8)
+plt.xlabel("Nombre de clusters (k)", fontsize=12)
+plt.ylabel("Inertie", fontsize=12)
+plt.title("Analyse du coude (Elbow Method)", fontsize=14)
+plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig("data/matrice_correlation.png", dpi=300, bbox_inches="tight")
+plt.savefig("apps/output/figures/k_means/coude_kmeans.png", dpi=300, bbox_inches="tight")
+
+print("✓ Fichiers CSV générés dans apps/output/results/")
+print("✓ Fichiers PNG générés dans apps/output/figures/k_means/")

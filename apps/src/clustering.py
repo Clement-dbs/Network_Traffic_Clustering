@@ -15,6 +15,8 @@ except ImportError:
     from data_loader import load_data
     from preprocessing import preprocess_data
 
+output_dir = Path(__file__).resolve().parents[1] / "output" / "figures" / "clustering"
+
 
 def save_cluster_figure(X, labels, title, output_path):
     if X.shape[1] < 2:
@@ -78,7 +80,7 @@ if __name__ == "__main__":
     X_sample = X[indices]
 
     Z = linkage(X_sample, method="ward")
-    dendro_path = save_dendrogram(Z, "apps/output/figures/dendrogram_ward.png", p=6)
+    dendro_path = save_dendrogram(Z, str(output_dir / "dendrogram_ward.png"), p=6)
 
 
 # for k in range(2,10):
@@ -99,7 +101,7 @@ if __name__ == "__main__":
         X_sample,
         labels_height,
         title=f"fcluster - coupe a hauteur={cut_height:.2f}",
-        output_path="apps/output/figures/agglomerative_fcluster_height.png",
+        output_path=str(output_dir / "agglomerative_fcluster_height.png"),
         plot_method="pca",
     )
 
@@ -110,7 +112,7 @@ if __name__ == "__main__":
         X_sample,
         labels_model,
         title=f"AgglomerativeClustering - K={K} - silhouette={sil:.3f}",
-        output_path="apps/output/figures/agglomerative_model_k.png",
+        output_path=str(output_dir / "agglomerative_model_k.png"),
         plot_method="pca",
     )
     print("Dendrogram saved to:", dendro_path)
