@@ -1,22 +1,16 @@
-import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
-
-try:
-    from .data_loader import load_data, get_tp_features
-    from .preprocessing import preprocess_data
-except ImportError:
-    from data_loader import load_data, get_tp_features
-    from preprocessing import preprocess_data
-
-# Déterminer le répertoire de base du projet
-BASE_DIR = Path(__file__).resolve().parents[2]
-OUTPUT_FIGURES_DBSCAN = BASE_DIR / "apps" / "output" / "figures" / "dbscan"
-OUTPUT_FIGURES_DBSCAN.mkdir(parents=True, exist_ok=True)
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import PCA
+from pathlib import Path
+from data_loader import load_data, get_tp_features
+from preprocessing import preprocess_data
 
 ### Préparation de données
 
@@ -24,8 +18,8 @@ print('='*80)
 print('PARTIE 1 - PREPARATION DES DONNEES')
 print('='*80)
 
-# Charger les données via le script commun
-df = load_data("testing")
+# Charger le fichier
+df = load_data("testing").head(20000)
 
 print(f'   - {len(df):,} points')
 print(f'   - Colonnes: {list(df.columns)}')
@@ -42,9 +36,8 @@ print(df.describe())
 # * dpkts : nombre de paquets destination
 # * rate : taux de transfert
 
-features = get_tp_features(df, include_proto=True).columns.tolist()
-numeric_features = get_tp_features(df, include_proto=False).columns.tolist()
-df = df[features]
+features = ['dur', 'sbytes', 'dbytes', 'spkts', 'dpkts', 'rate', 'sttl', 'dttl']
+df = df[features] 
 df = df.head(20000)
 
 # Etape 2: Nettoyage
@@ -65,15 +58,26 @@ print('='*80)
 print('PARTIE 3 - PREPROCESSING')
 print('='*80)
 
-## Preprocessing (commun au projet : one-hot + scaling)
-X_scaled, _ = preprocess_data(df, include_proto=True)
+## Preprocessing
+num_cols = df.select_dtypes(include=["int64", "float64"]).columns
+cat_cols = df.select_dtypes(include=["string"]).columns
+
+preprocessor = ColumnTransformer([
+    ('num', Pipeline([
+        ('scaler',  StandardScaler())
+    ]), num_cols),
+    ('cat', Pipeline([
+        ('encoder', OneHotEncoder(handle_unknown='ignore'))
+    ]), cat_cols)
+])
 
 
 print('\n' + '='*80)
 print('PARTIE 4 - METHODE k-DISTANCE POUR CHOISIR EPSILON')
 print('='*80)
 
-## Trouver les NN
+## Trouver les NN 
+X_scaled = preprocessor.fit_transform(df)
 min_samples = 2 * X_scaled.shape[1]
 
 k = min_samples
@@ -104,8 +108,9 @@ ax.axhline(y=epsilon, color='red', linestyle='--', linewidth=2,
 ax.plot(coude_idx, epsilon, 'ro', markersize=8, label='Coude')
 ax.legend(fontsize=11)
 plt.tight_layout()
-plt.savefig(str(OUTPUT_FIGURES_DBSCAN / "k-distance.png"), dpi=300, bbox_inches='tight')
-# plt.show() - Commenté pour éviter les blocages en mode headless
+Path("apps/output/figures/dbscan").mkdir(parents=True, exist_ok=True)
+plt.savefig("apps/output/figures/dbscan/k-distance.png", dpi=300, bbox_inches='tight')
+plt.show()
 plt.close()
 
 
@@ -136,9 +141,9 @@ for cluster_id in sorted(set(labels)):
     if cluster_id == -1:
         continue
     mask = labels == cluster_id
-    cluster_center = df.loc[mask, numeric_features].mean()
+    cluster_center = df.loc[mask, features].mean()
     print(f'Cluster {cluster_id} :')
-    for col in numeric_features:
+    for col in features:
         print(f'   {col}: {cluster_center[col]:.2f}')
 
 ### Visualisation 
@@ -182,7 +187,7 @@ ax.set_ylabel(y_col, fontsize=12)
 ax.set_title(f'Clusters identifiés par DBSCAN\nN={n_clusters} clusters, bruit={n_bruit} pts', fontsize=14, fontweight='bold')
 ax.legend(loc='best', fontsize=10)
 ax.grid(True, alpha=0.3)
-
+Path("apps/output/figures/dbscan").mkdir(parents=True, exist_ok=True)
 plt.tight_layout()
 plt.savefig(str(OUTPUT_FIGURES_DBSCAN / "clusters.png"), dpi=300, bbox_inches='tight')
 # plt.show() - Commenté pour éviter les blocages en mode headless

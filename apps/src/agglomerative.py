@@ -8,12 +8,10 @@ from scipy.cluster.hierarchy import dendrogram, fcluster, linkage
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 
-try:
-    from .data_loader import load_data
-    from .preprocessing import preprocess_data
-except ImportError:
-    from data_loader import load_data
-    from preprocessing import preprocess_data
+
+
+from data_loader import load_data
+from preprocessing import preprocess_data
 
 output_dir = Path(__file__).resolve().parents[1] / "output" / "figures" / "agglomerative"
 
@@ -93,7 +91,7 @@ if __name__ == "__main__":
 #     scores.append(score)
 #     print("K =",k,"score =",score)
 
-    K = 6
+    K = 9
     cut_height = float(np.percentile(Z[:, 2],75))
     labels_height = fcluster(Z, cut_height, criterion="distance")
     height_path = save_cluster_figure(
