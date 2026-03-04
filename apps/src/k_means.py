@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from pathlib import Path
 from sklearn.cluster import KMeans
 
 try:
@@ -12,8 +13,13 @@ except ImportError:
     from data_loader import load_data, get_tp_features
     from preprocessing import preprocess_data
 
-os.makedirs("apps/output/results", exist_ok=True)
-os.makedirs("apps/output/figures/k_means", exist_ok=True)
+# Déterminer le répertoire de base du projet
+BASE_DIR = Path(__file__).resolve().parents[2]
+OUTPUT_RESULTS = BASE_DIR / "apps" / "output" / "results"
+OUTPUT_FIGURES = BASE_DIR / "apps" / "output" / "figures" / "k_means"
+
+OUTPUT_RESULTS.mkdir(parents=True, exist_ok=True)
+OUTPUT_FIGURES.mkdir(parents=True, exist_ok=True)
 sns.set_style("whitegrid")
 
 donnees = load_data("testing")
@@ -21,9 +27,8 @@ donnees = load_data("testing")
 variables_principales = get_tp_features(donnees, include_proto=True).columns.tolist()
 variables_principales_numeriques = get_tp_features(donnees, include_proto=False).columns.tolist()
 
-os.makedirs("apps/output/results", exist_ok=True)
-donnees.head(20).to_csv("apps/output/results/apercu_donnees.csv", index=False)
-donnees.describe().to_csv("apps/output/results/statistiques_descriptives.csv")
+donnees.head(20).to_csv(str(OUTPUT_RESULTS / "apercu_donnees.csv"), index=False)
+donnees.describe().to_csv(str(OUTPUT_RESULTS / "statistiques_descriptives.csv"))
 
 # résumé global
 nb_lignes, nb_colonnes = donnees.shape
@@ -37,7 +42,7 @@ print(f"Dataset: {nb_lignes} lignes, {nb_colonnes} colonnes")
 print(f"Variables principales: {variables_principales}\n")
 
 # stats principales
-donnees[variables_principales_numeriques].describe().round(2).to_csv("apps/output/results/stats_variables_principales.csv")
+donnees[variables_principales_numeriques].describe().round(2).to_csv(str(OUTPUT_RESULTS / "stats_variables_principales.csv"))
 
 # histogrammes (grille 3x3)
 figure_hist, axes_hist = plt.subplots(3, 3, figsize=(15, 12))
@@ -51,7 +56,7 @@ for index in range(len(variables_principales_numeriques[:9]), 9):
     axes_hist[index].axis("off")
 
 plt.tight_layout()
-plt.savefig("apps/output/figures/k_means/distribution_variables_principales.png", dpi=300, bbox_inches="tight")
+plt.savefig(str(OUTPUT_FIGURES / "distribution_variables_principales.png"), dpi=300, bbox_inches="tight")
 
 # boxplots (grille 3x3)
 figure_box, axes_box = plt.subplots(3, 3, figsize=(15, 12))
@@ -65,7 +70,7 @@ for index in range(len(variables_principales_numeriques[:9]), 9):
     axes_box[index].axis("off")
 
 plt.tight_layout()
-plt.savefig("apps/output/figures/k_means/boxplots_variables_principales.png", dpi=300, bbox_inches="tight")
+plt.savefig(str(OUTPUT_FIGURES / "boxplots_variables_principales.png"), dpi=300, bbox_inches="tight")
 
 # rapport outliers IQR
 nb_lignes_total = len(donnees)
@@ -97,7 +102,7 @@ rapport_outliers = pd.DataFrame(
     columns=["var", "outliers", "outliers_%", "zeros", "negatifs", "limite_inf", "limite_sup"],
 ).sort_values("outliers", ascending=False)
 
-rapport_outliers.to_csv("apps/output/results/outliers_iqr.csv", index=False)
+rapport_outliers.to_csv(str(OUTPUT_RESULTS / "outliers_iqr.csv"), index=False)
 
 # analyse du coude (elbow method)
 donnees_normalisees, _ = preprocess_data(donnees, include_proto=True)
@@ -117,7 +122,7 @@ plt.ylabel("Inertie", fontsize=12)
 plt.title("Analyse du coude (Elbow Method)", fontsize=14)
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig("apps/output/figures/k_means/coude_kmeans.png", dpi=300, bbox_inches="tight")
+plt.savefig(str(OUTPUT_FIGURES / "coude_kmeans.png"), dpi=300, bbox_inches="tight")
 
 print("✓ Fichiers CSV générés dans apps/output/results/")
 print("✓ Fichiers PNG générés dans apps/output/figures/k_means/")

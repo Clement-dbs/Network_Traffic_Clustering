@@ -18,20 +18,19 @@ except ImportError:
 output_dir = Path(__file__).resolve().parents[1] / "output" / "figures" / "agglomerative"
 
 
-def save_cluster_figure(X, labels, title, output_path):
-    if X.shape[1] < 2:
-        print("Pas assez de dimensions pour faire une figure.")
-        return
 def ensure_dense_matrix(X):
     if hasattr(X, "toarray"):
         return X.toarray()
     return X
+
+
 def project_for_plot(X, method="pca"):
     if X.shape[1] <= 2:
         return X[:, :2]
     if method == "pca":
         return PCA(n_components=2, random_state=42).fit_transform(X)
     return X[:, :2]
+
 
 def save_cluster_figure(X, labels, title, output_path, plot_method="pca"):
     X = ensure_dense_matrix(X)
@@ -50,6 +49,7 @@ def save_cluster_figure(X, labels, title, output_path, plot_method="pca"):
     plt.close()
     return str(output_file)
 
+
 def save_dendrogram(Z, output_path, p=6):
     output_file = Path(output_path).resolve()
     output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -64,11 +64,14 @@ def save_dendrogram(Z, output_path, p=6):
     plt.close()
     return str(output_file)
 
+
 def save_silhouette(X, labels):
     n_clusters = len(np.unique(labels))
     if n_clusters < 2 or n_clusters >= X.shape[0]:
         return None
     return float(silhouette_score(X, labels))
+
+
 if __name__ == "__main__":
     df = load_data("testing").head(1000)
     X, scaler = preprocess_data(df, include_proto=True)

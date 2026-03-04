@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 
@@ -12,7 +13,10 @@ except ImportError:
     from data_loader import load_data, get_tp_features
     from preprocessing import preprocess_data
 
-os.makedirs("apps/output/figures/dbscan", exist_ok=True)
+# Déterminer le répertoire de base du projet
+BASE_DIR = Path(__file__).resolve().parents[2]
+OUTPUT_FIGURES_DBSCAN = BASE_DIR / "apps" / "output" / "figures" / "dbscan"
+OUTPUT_FIGURES_DBSCAN.mkdir(parents=True, exist_ok=True)
 
 ### Préparation de données
 
@@ -100,8 +104,8 @@ ax.axhline(y=epsilon, color='red', linestyle='--', linewidth=2,
 ax.plot(coude_idx, epsilon, 'ro', markersize=8, label='Coude')
 ax.legend(fontsize=11)
 plt.tight_layout()
-plt.savefig("apps/output/figures/dbscan/k-distance.png", dpi=300, bbox_inches='tight')
-plt.show()
+plt.savefig(str(OUTPUT_FIGURES_DBSCAN / "k-distance.png"), dpi=300, bbox_inches='tight')
+# plt.show() - Commenté pour éviter les blocages en mode headless
 plt.close()
 
 
@@ -180,5 +184,5 @@ ax.legend(loc='best', fontsize=10)
 ax.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig("apps/output/figures/dbscan/clusters.png", dpi=300, bbox_inches='tight')
-plt.show()
+plt.savefig(str(OUTPUT_FIGURES_DBSCAN / "clusters.png"), dpi=300, bbox_inches='tight')
+# plt.show() - Commenté pour éviter les blocages en mode headless
