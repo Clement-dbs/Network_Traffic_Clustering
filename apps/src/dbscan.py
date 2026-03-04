@@ -1,12 +1,18 @@
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.decomposition import PCA
+
+try:
+    from .data_loader import load_data, get_tp_features
+    from .preprocessing import preprocess_data
+except ImportError:
+    from data_loader import load_data, get_tp_features
+    from preprocessing import preprocess_data
+
+os.makedirs("apps/output/figures/dbscan", exist_ok=True)
 
 ### Préparation de données
 
@@ -14,9 +20,8 @@ print('='*80)
 print('PARTIE 1 - PREPARATION DES DONNEES')
 print('='*80)
 
-# Charger le fichier
-fichier_csv = './data/UNSW_NB15_testing-set.csv'
-df = pd.read_csv(fichier_csv)
+# Charger les données via le script commun
+df = load_data("testing")
 
 print(f'   - {len(df):,} points')
 print(f'   - Colonnes: {list(df.columns)}')
@@ -33,8 +38,9 @@ print(df.describe())
 # * dpkts : nombre de paquets destination
 # * rate : taux de transfert
 
-features = ['dur', 'sbytes', 'dbytes', 'spkts', 'dpkts', 'rate', 'sttl', 'dttl']
-df = df[features] 
+features = get_tp_features(df, include_proto=True).columns.tolist()
+numeric_features = get_tp_features(df, include_proto=False).columns.tolist()
+df = df[features]
 df = df.head(20000)
 
 # Etape 2: Nettoyage
@@ -55,26 +61,15 @@ print('='*80)
 print('PARTIE 3 - PREPROCESSING')
 print('='*80)
 
-## Preprocessing
-num_cols = df.select_dtypes(include=["int64", "float64"]).columns
-cat_cols = df.select_dtypes(include=["string"]).columns
-
-preprocessor = ColumnTransformer([
-    ('num', Pipeline([
-        ('scaler',  StandardScaler())
-    ]), num_cols),
-    ('cat', Pipeline([
-        ('encoder', OneHotEncoder(handle_unknown='ignore'))
-    ]), cat_cols)
-])
+## Preprocessing (commun au projet : one-hot + scaling)
+X_scaled, _ = preprocess_data(df, include_proto=True)
 
 
 print('\n' + '='*80)
 print('PARTIE 4 - METHODE k-DISTANCE POUR CHOISIR EPSILON')
 print('='*80)
 
-## Trouver les NN 
-X_scaled = preprocessor.fit_transform(df)
+## Trouver les NN
 min_samples = 2 * X_scaled.shape[1]
 
 k = min_samples
@@ -105,7 +100,7 @@ ax.axhline(y=epsilon, color='red', linestyle='--', linewidth=2,
 ax.plot(coude_idx, epsilon, 'ro', markersize=8, label='Coude')
 ax.legend(fontsize=11)
 plt.tight_layout()
-plt.savefig("./figures/k-distance", dpi=300, bbox_inches='tight')
+plt.savefig("apps/output/figures/dbscan/k-distance.png", dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -137,9 +132,9 @@ for cluster_id in sorted(set(labels)):
     if cluster_id == -1:
         continue
     mask = labels == cluster_id
-    cluster_center = df.loc[mask, features].mean()
+    cluster_center = df.loc[mask, numeric_features].mean()
     print(f'Cluster {cluster_id} :')
-    for col in features:
+    for col in numeric_features:
         print(f'   {col}: {cluster_center[col]:.2f}')
 
 ### Visualisation 
@@ -185,5 +180,5 @@ ax.legend(loc='best', fontsize=10)
 ax.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig("./figures/clusters", dpi=300, bbox_inches='tight')
+plt.savefig("apps/output/figures/dbscan/clusters.png", dpi=300, bbox_inches='tight')
 plt.show()

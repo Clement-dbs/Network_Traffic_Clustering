@@ -15,7 +15,7 @@ except ImportError:
     from data_loader import load_data
     from preprocessing import preprocess_data
 
-output_dir = Path(__file__).resolve().parents[1] / "output" / "figures" / "clustering"
+output_dir = Path(__file__).resolve().parents[1] / "output" / "figures" / "agglomerative"
 
 
 def save_cluster_figure(X, labels, title, output_path):
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     Z = linkage(X_sample, method="ward")
     dendro_path = save_dendrogram(Z, str(output_dir / "dendrogram_ward.png"), p=6)
 
-
+# scores = []
 # for k in range(2,10):
 #     model = AgglomerativeClustering(n_clusters=k, linkage="ward")
 #     labels = model.fit_predict(X_sample)
@@ -90,10 +90,6 @@ if __name__ == "__main__":
 #     scores.append(score)
 #     print("K =",k,"score =",score)
 
-# plt.plot(range(2,10), scores)
-# plt.xlabel("Nombre de clusters")
-# plt.ylabel("Silhouette score")
-# plt.show()
     K = 6
     cut_height = float(np.percentile(Z[:, 2],75))
     labels_height = fcluster(Z, cut_height, criterion="distance")

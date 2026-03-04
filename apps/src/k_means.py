@@ -4,15 +4,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
+
+try:
+    from .data_loader import load_data, get_tp_features
+    from .preprocessing import preprocess_data
+except ImportError:
+    from data_loader import load_data, get_tp_features
+    from preprocessing import preprocess_data
 
 os.makedirs("apps/output/results", exist_ok=True)
 os.makedirs("apps/output/figures/k_means", exist_ok=True)
 sns.set_style("whitegrid")
 
-donnees = pd.read_csv("data/UNSW_NB15_testing-set.csv")
+donnees = load_data("testing")
 
-variables_principales = ["dur", "sbytes", "dbytes", "spkts", "dpkts", "rate", "sttl", "dttl"]
+variables_principales = get_tp_features(donnees, include_proto=True).columns.tolist()
+variables_principales_numeriques = get_tp_features(donnees, include_proto=False).columns.tolist()
 
 os.makedirs("apps/output/results", exist_ok=True)
 donnees.head(20).to_csv("apps/output/results/apercu_donnees.csv", index=False)
@@ -30,17 +37,17 @@ print(f"Dataset: {nb_lignes} lignes, {nb_colonnes} colonnes")
 print(f"Variables principales: {variables_principales}\n")
 
 # stats principales
-donnees[variables_principales].describe().round(2).to_csv("apps/output/results/stats_variables_principales.csv")
+donnees[variables_principales_numeriques].describe().round(2).to_csv("apps/output/results/stats_variables_principales.csv")
 
 # histogrammes (grille 3x3)
 figure_hist, axes_hist = plt.subplots(3, 3, figsize=(15, 12))
 figure_hist.suptitle("Distribution des variables principales", fontsize=16)
 axes_hist = axes_hist.flatten()
 
-for index, colonne in enumerate(variables_principales[:9]):
+for index, colonne in enumerate(variables_principales_numeriques[:9]):
     donnees[colonne].hist(bins=50, ax=axes_hist[index], edgecolor="black", alpha=0.7)
 
-for index in range(len(variables_principales[:9]), 9):
+for index in range(len(variables_principales_numeriques[:9]), 9):
     axes_hist[index].axis("off")
 
 plt.tight_layout()
@@ -51,10 +58,10 @@ figure_box, axes_box = plt.subplots(3, 3, figsize=(15, 12))
 figure_box.suptitle("Boxplots des variables principales", fontsize=16)
 axes_box = axes_box.flatten()
 
-for index, colonne in enumerate(variables_principales[:9]):
+for index, colonne in enumerate(variables_principales_numeriques[:9]):
     donnees.boxplot(column=colonne, ax=axes_box[index])
 
-for index in range(len(variables_principales[:9]), 9):
+for index in range(len(variables_principales_numeriques[:9]), 9):
     axes_box[index].axis("off")
 
 plt.tight_layout()
@@ -64,7 +71,7 @@ plt.savefig("apps/output/figures/k_means/boxplots_variables_principales.png", dp
 nb_lignes_total = len(donnees)
 lignes_rapport = []
 
-for colonne in variables_principales:
+for colonne in variables_principales_numeriques:
     quartile_1 = donnees[colonne].quantile(0.25)
     quartile_3 = donnees[colonne].quantile(0.75)
     ecart_interquartile = quartile_3 - quartile_1
@@ -93,8 +100,7 @@ rapport_outliers = pd.DataFrame(
 rapport_outliers.to_csv("apps/output/results/outliers_iqr.csv", index=False)
 
 # analyse du coude (elbow method)
-scaleur = StandardScaler()
-donnees_normalisees = scaleur.fit_transform(donnees[variables_principales])
+donnees_normalisees, _ = preprocess_data(donnees, include_proto=True)
 
 inertias = []
 range_k = range(1, 11)
