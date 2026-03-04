@@ -1,31 +1,9 @@
-"""
-TP K-Means - Clustering de Trafic Réseau Cybersécurité
-Dataset: UNSW-NB15 Network Intrusion Dataset
-
-PARTIE 1 - ANALYSE EXPLORATOIRE
-
-Auteur: Groupe [Nom]
-Date: Mars 2026
-"""
-
-# ============================================================================
-# IMPORTS ET CONFIGURATION
-# ============================================================================
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-# ----------------------------------------------------------------------------
-# CE QU'ON VEUT : Préparer l'environnement de travail
-# CE QU'ON FAIT : Créer le dossier de sortie et configurer l'affichage
-# POURQUOI : Organisation des fichiers et lisibilité des résultats
-# ----------------------------------------------------------------------------
-
-# Créer le dossier data/ pour stocker tous les fichiers générés
-# Raison : Centraliser les outputs pour une meilleure organisation du projet
 os.makedirs('data', exist_ok=True)
 
 # Configuration pandas pour améliorer la lisibilité dans le terminal
@@ -36,9 +14,9 @@ pd.set_option('display.max_rows', 20)         # Limiter lignes affichées
 pd.set_option('display.precision', 2)         # 2 décimales suffisent
 sns.set_style('whitegrid')                     # Style graphiques élégant
 
-print("="*80)
+
 print("PARTIE 1 - ANALYSE EXPLORATOIRE")
-print("="*80)
+print("="*30)
 
 
 # ============================================================================
@@ -55,7 +33,7 @@ print("\n1.1 Dimensions du dataset:")
 
 # Charger le fichier CSV dans un DataFrame
 # Raison : pandas offre des outils puissants pour l'analyse de données tabulaires
-donnees_reseau = pd.read_csv('UNSW_NB15_testing-set.csv')
+donnees_reseau = pd.read_csv('data/UNSW_NB15_testing-set.csv')
 
 nombre_connexions = donnees_reseau.shape[0]
 nombre_variables = donnees_reseau.shape[1]
@@ -138,22 +116,6 @@ print(donnees_reseau[variables_statistiques].describe().round(2))
 print(f"\n   Note: Voir 'data/statistiques_descriptives.csv' pour toutes les variables")
 
 
-# ============================================================================
-# 2. IDENTIFICATION DES VARIABLES PERTINENTES POUR LE CLUSTERING
-# ============================================================================
-
-# ----------------------------------------------------------------------------
-# CE QU'ON VEUT : Sélectionner les bonnes variables pour K-Means
-# CE QU'ON FAIT : Vérifier les variables du sujet et exclure les non pertinentes
-# POURQUOI : K-Means nécessite des variables numériques qui représentent
-#            réellement des caractéristiques du trafic réseau
-# ----------------------------------------------------------------------------
-
-print("\n\n2. IDENTIFICATION DES VARIABLES PERTINENTES")
-print("-" * 80)
-
-# Variables mentionnées dans le sujet du TP comme importantes
-# Raison : Le sujet a identifié ces variables comme caractéristiques du trafic
 variables_sujet_tp = ['dur', 'proto', 'sbytes', 'dbytes', 'sttl', 'dttl', 
                       'spkts', 'dpkts', 'rate']
 
