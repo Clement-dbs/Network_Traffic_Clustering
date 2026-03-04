@@ -108,7 +108,7 @@ rapport_outliers.to_csv(str(OUTPUT_RESULTS / "outliers_iqr.csv"), index=False)
 donnees_normalisees, _ = preprocess_data(donnees, include_proto=True)
 
 inertias = []
-range_k = range(1, 11)
+range_k = range(1, 21)  # Augmenter jusqu'à 20 clusters pour mieux voir le coude
 
 for k in range_k:
     kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
@@ -120,9 +120,33 @@ plt.plot(range_k, inertias, "bo-", linewidth=2, markersize=8)
 plt.xlabel("Nombre de clusters (k)", fontsize=12)
 plt.ylabel("Inertie", fontsize=12)
 plt.title("Analyse du coude (Elbow Method)", fontsize=14)
+plt.axvline(x=9, color='red', linestyle='--', linewidth=2, label='k=9 (recommandé)')
 plt.grid(True, alpha=0.3)
+plt.legend()
 plt.tight_layout()
 plt.savefig(str(OUTPUT_FIGURES / "coude_kmeans.png"), dpi=300, bbox_inches="tight")
 
-print("✓ Fichiers CSV générés dans apps/output/results/")
+# Appliquer K-Means avec k=9 (à ajuster selon le graphique du coude)
+print(f"\n✓ Analyse du coude effectuée")
+print(f"Applying K-Means with k=9...\n")
+
+K_OPTIMAL = 9
+kmeans_final = KMeans(n_clusters=K_OPTIMAL, random_state=42, n_init=10)
+donnees['cluster'] = kmeans_final.fit_predict(donnees_normalisees)
+donnees['cluster_name'] = donnees['cluster'].apply(lambda x: f'Cluster {x}')
+
+# Statistiques des clusters
+print(f"{'='*80}")
+print(f"RESULTS K-MEANS (k={K_OPTIMAL})")
+print(f"{'='*80}")
+for cluster_id in range(K_OPTIMAL):
+    count = (donnees['cluster'] == cluster_id).sum()
+    pct = count / len(donnees) * 100
+    print(f"Cluster {cluster_id}: {count:,} points ({pct:.1f}%)")
+
+# Centroïdes (statistiques des clusters)
+centroids_df = donnees.groupby('cluster')[variables_principales_numeriques].mean()
+centroids_df.to_csv(str(OUTPUT_RESULTS / "kmeans_centroids.csv"))
+print(f"\nCentroïdes sauvegardés dans kmeans_centroids.csv")
+print("\n✓ Fichiers CSV générés dans apps/output/results/")
 print("✓ Fichiers PNG générés dans apps/output/figures/k_means/")
