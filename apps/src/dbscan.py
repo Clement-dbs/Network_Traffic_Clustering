@@ -35,7 +35,6 @@ print(df.describe())
 # * spkts : nombre de paquets source
 # * dpkts : nombre de paquets destination
 # * rate : taux de transfert
-# features = get_tp_features(df, include_proto=False).columns.tolist()
 
 features = ['dur', 'sbytes', 'dbytes', 'spkts', 'dpkts', 'rate', 'sttl', 'dttl']
 df = df[features] 
@@ -190,5 +189,6 @@ ax.legend(loc='best', fontsize=10)
 ax.grid(True, alpha=0.3)
 Path("apps/output/figures/dbscan").mkdir(parents=True, exist_ok=True)
 plt.tight_layout()
-plt.savefig(str(OUTPUT_FIGURES_DBSCAN / "clusters.png"), dpi=300, bbox_inches='tight')
+plt.savefig("apps/output/figures/dbscan/clusters.png", dpi=300, bbox_inches='tight')
+plt.show()
 # plt.show() - Commenté pour éviter les blocages en mode headless
