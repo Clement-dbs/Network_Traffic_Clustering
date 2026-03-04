@@ -9,7 +9,6 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
-# Backend non-interactif (pour serveurs/CI). À mettre AVANT tout affichage.
 matplotlib.use("Agg")
 
 try:
