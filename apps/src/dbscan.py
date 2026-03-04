@@ -35,6 +35,7 @@ print(df.describe())
 # * spkts : nombre de paquets source
 # * dpkts : nombre de paquets destination
 # * rate : taux de transfert
+# features = get_tp_features(df, include_proto=False).columns.tolist()
 
 features = ['dur', 'sbytes', 'dbytes', 'spkts', 'dpkts', 'rate', 'sttl', 'dttl']
 df = df[features] 

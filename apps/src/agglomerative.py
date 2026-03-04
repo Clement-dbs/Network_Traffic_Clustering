@@ -1,12 +1,17 @@
 from pathlib import Path
+from sklearn.compose import ColumnTransformer
+from sklearn.compose import ColumnTransformer
 from sklearn.decomposition import PCA
 import matplotlib
+from sklearn.preprocessing import OneHotEncoder
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.cluster.hierarchy import dendrogram, fcluster, linkage
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 
 
@@ -53,7 +58,7 @@ def save_dendrogram(Z, output_path, p=6):
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     plt.figure(figsize=(10, 4))
-    dendrogram(Z, truncate_mode="level", p=p, no_labels=True, color_threshold=0)
+    dendrogram(Z, truncate_mode="level", p=p, no_labels=True, color_threshold=10)
     plt.title("Dendrogram")
     plt.xlabel("Sample index")
     plt.ylabel("Distance")
@@ -73,6 +78,18 @@ def save_silhouette(X, labels):
 if __name__ == "__main__":
     df = load_data("testing").head(1000)
     X, scaler = preprocess_data(df, include_proto=True)
+#     num_cols = df.select_dtypes(include=["int64", "float64"]).columns
+#     cat_cols = df.select_dtypes(include=["string"]).columns
+
+#     preprocessor = ColumnTransformer([
+#     ('num', Pipeline([
+#         ('scaler',  StandardScaler())
+#     ]), num_cols),
+#     ('cat', Pipeline([
+#         ('encoder', OneHotEncoder(handle_unknown='ignore'))
+#     ]), cat_cols)
+# ])
+    # X = preprocessor.fit_transform(df)
     X = ensure_dense_matrix(X)
 
     sample_size = min(2000, X.shape[0])
